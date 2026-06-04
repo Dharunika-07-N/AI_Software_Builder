@@ -1,0 +1,986 @@
+### SYSTEM DESIGN DOCUMENT (SDD)
+
+
+---
+
+# 1. INTRODUCTION
+
+## 1.1 Purpose
+
+Forge AI is an AI-powered software compiler that transforms natural language requirements into executable software applications.
+
+Unlike traditional AI app builders that directly generate applications from prompts, Forge AI follows a compiler-inspired architecture consisting of multiple stages including requirement analysis, architecture planning, schema generation, validation, repair, runtime verification, and deployment preparation.
+
+The goal is to generate reliable, deterministic, and executable applications while minimizing hallucinations and inconsistencies.
+
+---
+
+## 1.2 Vision
+
+Enable non-technical and technical users to describe software requirements in natural language and obtain a fully validated application specification that can be directly executed or converted into deployable code.
+
+Example:
+
+Input:
+
+Build a CRM with login, contacts, analytics dashboard, premium subscription, and role-based access.
+
+Output:
+
+* UI Schema
+* API Schema
+* Database Schema
+* Authentication Rules
+* Business Logic
+* Runtime Ready Application
+
+---
+
+## 1.3 Design Principles
+
+### Reliability First
+
+Every output must be validated before delivery.
+
+### Compiler-Based Design
+
+Generation occurs through multiple stages.
+
+### Deterministic Outputs
+
+Same prompt should produce consistent results.
+
+### Execution Awareness
+
+Generated outputs must be executable.
+
+### Modular Architecture
+
+Each subsystem should be independently replaceable.
+
+---
+
+# 2. SYSTEM OVERVIEW
+
+## Problem Statement
+
+Existing AI builders often suffer from:
+
+* Invalid JSON
+* Missing APIs
+* Missing database fields
+* Authentication inconsistencies
+* Broken user workflows
+* Hallucinated components
+
+These systems usually follow:
+
+Prompt → LLM → Application
+
+This lacks validation and control.
+
+---
+
+## Proposed Solution
+
+Forge AI follows:
+
+Prompt
+↓
+Requirement Compiler
+↓
+Intent Graph
+↓
+Architecture Planner
+↓
+Schema Generator
+↓
+Validation Mesh
+↓
+Repair Engine
+↓
+Runtime Simulator
+↓
+Application Generator
+
+This introduces engineering control between generation stages.
+
+---
+
+# 3. HIGH LEVEL ARCHITECTURE
+
+```
+                User Prompt
+                      │
+                      ▼
+      ┌───────────────────────────┐
+      │ Requirement Compiler      │
+      └──────────────┬────────────┘
+                     │
+                     ▼
+      ┌───────────────────────────┐
+      │ Intent Graph Builder      │
+      └──────────────┬────────────┘
+                     │
+                     ▼
+      ┌───────────────────────────┐
+      │ Architecture Planner      │
+      └──────────────┬────────────┘
+                     │
+                     ▼
+      ┌───────────────────────────┐
+      │ Schema Generator          │
+      └──────────────┬────────────┘
+                     │
+                     ▼
+      ┌───────────────────────────┐
+      │ Validation Mesh           │
+      └──────────────┬────────────┘
+                     │
+                Errors?
+                     │
+          ┌──────────┴──────────┐
+          │                     │
+         No                    Yes
+          │                     │
+          ▼                     ▼
+Runtime Simulator      Intelligent Repair
+          │                     │
+          └──────────┬──────────┘
+                     ▼
+          Executable Application
+```
+
+---
+
+# 4. CORE PIPELINE DESIGN
+
+The generation process is divided into six stages.
+
+---
+
+# STAGE 1: REQUIREMENT COMPILER
+
+## Objective
+
+Convert unstructured natural language into structured requirements.
+
+---
+
+## Input
+
+Build a CRM with contacts, analytics dashboard, login, premium subscriptions and admin access.
+
+---
+
+## Processing
+
+### Feature Extraction
+
+Identifies:
+
+* Contacts
+* Dashboard
+* Analytics
+* Login
+* Subscription
+
+### Role Extraction
+
+Identifies:
+
+* Admin
+* User
+
+### Constraint Extraction
+
+Identifies:
+
+* Premium Features
+* Access Rules
+
+---
+
+## Output
+
+{
+"application":"CRM",
+"roles":["Admin","User"],
+"features":[
+"Contacts",
+"Dashboard",
+"Analytics",
+"Subscription"
+]
+}
+
+---
+
+# STAGE 2: INTENT GRAPH BUILDER
+
+## Objective
+
+Convert requirements into a dependency graph.
+
+Unlike plain JSON, the graph captures relationships.
+
+---
+
+Example
+
+CRM
+├── Authentication
+├── Dashboard
+├── Contacts
+├── Analytics
+└── Subscription
+
+Authentication
+├── User
+└── Admin
+
+Subscription
+└── Premium Features
+
+---
+
+## Benefits
+
+* Dependency tracking
+* Consistency checking
+* Easier repairs
+* Traceability
+
+---
+
+# STAGE 3: ARCHITECTURE PLANNER
+
+## Objective
+
+Generate application architecture.
+
+---
+
+### Module Discovery
+
+Creates modules.
+
+Authentication Service
+
+Contact Service
+
+Analytics Service
+
+Subscription Service
+
+Notification Service
+
+---
+
+### User Flow Generation
+
+User Login
+↓
+Dashboard
+↓
+Contacts
+↓
+Upgrade Subscription
+
+---
+
+### Access Matrix
+
+| Role  | Dashboard | Contacts | Analytics |
+| ----- | --------- | -------- | --------- |
+| Admin | Yes       | Yes      | Yes       |
+| User  | Yes       | Yes      | No        |
+
+---
+
+### Architecture Blueprint
+
+Output:
+
+{
+"modules":[
+"auth",
+"contacts",
+"analytics",
+"subscription"
+]
+}
+
+---
+
+# STAGE 4: SCHEMA GENERATOR
+
+Generates all technical specifications.
+
+---
+
+## UI SCHEMA GENERATOR
+
+Produces:
+
+* Pages
+* Layouts
+* Components
+* Forms
+* Navigation
+
+Example:
+
+Dashboard
+
+Widgets:
+
+* User Stats
+* Revenue Chart
+* Activity Feed
+
+---
+
+## API SCHEMA GENERATOR
+
+Produces:
+
+GET /contacts
+
+POST /contacts
+
+PUT /contacts/{id}
+
+DELETE /contacts/{id}
+
+---
+
+Request Model
+
+{
+"name":"string",
+"email":"string"
+}
+
+---
+
+## DATABASE SCHEMA GENERATOR
+
+Produces:
+
+Users
+
+Contacts
+
+Subscriptions
+
+Payments
+
+Analytics
+
+---
+
+Example
+
+Contacts Table
+
+id
+
+name
+
+email
+
+created_at
+
+user_id
+
+---
+
+## AUTHORIZATION GENERATOR
+
+Produces:
+
+Roles
+
+Permissions
+
+Policies
+
+---
+
+Admin
+
+Create Users
+
+Delete Users
+
+View Analytics
+
+Manage Payments
+
+---
+
+User
+
+View Contacts
+
+Create Contacts
+
+Edit Own Contacts
+
+---
+
+## BUSINESS RULE GENERATOR
+
+Generates:
+
+Premium Feature Restrictions
+
+Role Based Access
+
+Workflow Policies
+
+Subscription Rules
+
+---
+
+# STAGE 5: VALIDATION MESH
+
+## Objective
+
+Verify consistency across every layer.
+
+This is the most important component.
+
+---
+
+## Layer 1
+
+JSON Validation
+
+Checks:
+
+* Missing Braces
+* Invalid Syntax
+* Malformed Objects
+
+---
+
+## Layer 2
+
+Schema Validation
+
+Checks:
+
+Required Fields
+
+Correct Data Types
+
+Naming Standards
+
+---
+
+## Layer 3
+
+Cross Layer Validation
+
+UI ↔ API
+
+API ↔ Database
+
+Database ↔ Auth
+
+Auth ↔ Business Rules
+
+---
+
+Example
+
+UI:
+
+Create Contact Button
+
+API:
+
+POST /contacts
+
+Database:
+
+contacts table
+
+Validation passes only if all exist.
+
+---
+
+## Layer 4
+
+Business Rule Validation
+
+Checks:
+
+Premium Features
+
+Access Control
+
+Subscription Logic
+
+Role Permissions
+
+---
+
+# STAGE 6: REPAIR ENGINE
+
+## Objective
+
+Automatically resolve failures.
+
+---
+
+## Repair Type 1
+
+JSON Repair
+
+Fix:
+
+Missing commas
+
+Missing braces
+
+Incorrect formatting
+
+---
+
+## Repair Type 2
+
+Schema Repair
+
+Add missing fields.
+
+Example
+
+Missing:
+
+created_at
+
+Automatically inserted.
+
+---
+
+## Repair Type 3
+
+Cross Layer Repair
+
+API references:
+
+customer_email
+
+Database contains:
+
+email
+
+Repair maps fields.
+
+---
+
+## Repair Type 4
+
+Targeted Regeneration
+
+Instead of regenerating everything:
+
+Only failing subsystem is regenerated.
+
+Example:
+
+API Layer Failure
+
+Only API Generator reruns.
+
+Benefits:
+
+* Lower Cost
+* Faster Response
+* Better Reliability
+
+---
+
+# 5. EXECUTION AWARENESS SYSTEM
+
+Traditional builders stop after generation.
+
+Forge AI validates execution.
+
+---
+
+## Runtime Simulator
+
+Tests application before delivery.
+
+---
+
+### UI Validation
+
+Can pages render?
+
+Can forms load?
+
+Can navigation function?
+
+---
+
+### API Validation
+
+Endpoints reachable?
+
+Requests valid?
+
+Responses valid?
+
+---
+
+### Database Validation
+
+Schema executable?
+
+Relations valid?
+
+Indexes correct?
+
+---
+
+### Auth Validation
+
+Permissions enforceable?
+
+Roles functional?
+
+---
+
+### Workflow Validation
+
+User Login
+
+Create Contact
+
+Upgrade Subscription
+
+Generate Analytics
+
+All flows tested.
+
+---
+
+## Execution Report
+
+{
+"status":"PASS",
+"issues":[]
+}
+
+---
+
+# 6. DATA MODEL
+
+## GenerationRun
+
+Stores generation sessions.
+
+run_id
+
+prompt
+
+status
+
+timestamp
+
+---
+
+## ValidationReport
+
+Stores validation outcomes.
+
+validation_id
+
+run_id
+
+errors
+
+warnings
+
+---
+
+## RepairLog
+
+Stores repairs.
+
+repair_id
+
+run_id
+
+issue
+
+resolution
+
+---
+
+## ExecutionReport
+
+Stores simulation results.
+
+execution_id
+
+run_id
+
+status
+
+findings
+
+---
+
+# 7. API DESIGN
+
+POST /generate
+
+Purpose:
+
+Generate application.
+
+Input
+
+{
+"prompt":"Build CRM"
+}
+
+Output
+
+{
+"run_id":"123"
+}
+
+---
+
+GET /results/{run_id}
+
+Returns generated artifacts.
+
+---
+
+POST /validate
+
+Runs validation mesh.
+
+---
+
+POST /repair
+
+Runs repair engine.
+
+---
+
+POST /simulate
+
+Runs runtime verification.
+
+---
+
+# 8. FAILURE HANDLING
+
+## Ambiguous Prompt
+
+Input:
+
+Build a business application.
+
+Action:
+
+Request clarification.
+
+---
+
+## Missing Roles
+
+Action:
+
+Apply assumptions.
+
+Default:
+
+Admin
+
+User
+
+---
+
+## Conflicting Requirements
+
+Input:
+
+Only admins can edit contacts.
+
+Users can edit contacts.
+
+Action:
+
+Generate conflict report.
+
+---
+
+## Unsupported Feature
+
+Action:
+
+Mark unsupported.
+
+Generate recommendation.
+
+---
+
+# 9. PERFORMANCE DESIGN
+
+## Latency Goals
+
+Intent Extraction
+
+< 2 seconds
+
+Architecture Planning
+
+< 4 seconds
+
+Schema Generation
+
+< 6 seconds
+
+Validation
+
+< 2 seconds
+
+Repair
+
+< 3 seconds
+
+Total
+
+< 15 seconds
+
+---
+
+# 10. TECHNOLOGY STACK
+
+Frontend
+
+React
+
+NextJS
+
+TailwindCSS
+
+---
+
+Backend
+
+FastAPI
+
+Python
+
+---
+
+Database
+
+PostgreSQL
+
+Redis
+
+---
+
+AI Layer
+
+GPT
+
+Claude
+
+Llama
+
+---
+
+Validation
+
+Pydantic
+
+JSON Schema
+
+Custom Rules Engine
+
+---
+
+Deployment
+
+Docker
+
+Kubernetes
+
+GitHub Actions
+
+---
+
+# 11. EVALUATION FRAMEWORK
+
+Dataset
+
+20 Test Prompts
+
+10 Real Applications
+
+10 Edge Cases
+
+---
+
+Metrics
+
+Success Rate
+
+Validation Pass Rate
+
+Repair Success Rate
+
+Latency
+
+Token Cost
+
+Failure Categories
+
+---
+
+Target Metrics
+
+Success Rate > 95%
+
+Validation Accuracy > 98%
+
+Repair Accuracy > 90%
+
+Latency < 15 sec
+
+---
+
+# 12. FUTURE ENHANCEMENTS
+
+Multi-Agent Planning
+
+Automatic Code Generation
+
+Visual Application Designer
+
+Fine-Tuned Validation Models
+
+Multi-Language Support
+
+Self-Healing Runtime
+
+One-Click Deployment
+
+---
+
+# 13. CONCLUSION
+
+Forge AI introduces a compiler-inspired software generation architecture that transforms natural language requirements into validated and executable applications. By separating generation into requirement compilation, intent graph construction, architecture planning, schema generation, validation, repair, and runtime verification, the platform achieves significantly higher reliability than traditional AI app builders. The design ensures deterministic outputs, automatic error correction, and execution readiness, making it suitable for production-grade software generation.

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forge AI — AI Application Compiler</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="logo-icon"><i class="fa-solid fa-microchip"></i></div>
+                <div class="logo-text">Forge<span>AI</span></div>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="compiler-tab">
+                    <i class="fa-solid fa-code-branch"></i> <span>Compiler CLI</span>
+                </button>
+                <button class="nav-item" data-tab="schemas-tab">
+                    <i class="fa-solid fa-file-code"></i> <span>AST & Schemas</span>
+                </button>
+                <button class="nav-item" data-tab="validation-tab">
+                    <i class="fa-solid fa-circle-check"></i> <span>Validation Mesh</span>
+                </button>
+                <button class="nav-item" data-tab="runtime-tab">
+                    <i class="fa-solid fa-play"></i> <span>Live Sandbox</span>
+                </button>
+                <button class="nav-item" data-tab="evaluation-tab">
+                    <i class="fa-solid fa-chart-line"></i> <span>Evaluator Suite</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="mode-badge">
+                    <i class="fa-solid fa-bolt"></i> Local Compiler Mode
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <div class="header-title">
+                    <h1 id="page-title">AI Software Compiler</h1>
+                    <p id="page-subtitle">Compile Natural Language requirements directly to executing applications.</p>
+                </div>
+                <div class="compiler-status-indicator" id="compiler-status-indicator">
+                    <span class="status-dot green"></span> Ready
+                </div>
+            </header>
+
+            <!-- Tabs container -->
+            <div class="tab-content-wrapper">
+                
+                <!-- TAB 1: COMPILER CLI -->
+                <section class="tab-pane active" id="compiler-tab">
+                    <div class="compiler-grid">
+                        <!-- Left pane: Input console -->
+                        <div class="panel glass">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-terminal"></i> Natural Language Input</h3>
+                                <div class="quick-examples">
+                                    <button class="btn btn-sm btn-outline" id="load-crm-example">CRM Prompt</button>
+                                    <button class="btn btn-sm btn-outline" id="load-store-example">E-Comm Prompt</button>
+                                </div>
+                            </div>
+                            <div class="panel-body flex-col">
+                                <textarea id="prompt-input" placeholder="Type application requirements here...&#10;E.g., 'Build a CRM with login, contacts, dashboard, role-based access, and premium plan with payments. Admins can see analytics.'"></textarea>
+                                <div class="action-bar">
+                                    <div class="settings-group">
+                                        <label class="switch-container">
+                                            <input type="checkbox" id="api-override-toggle">
+                                            <span class="slider"></span>
+                                            <span class="label-text">Force Mock Engine</span>
+                                        </label>
+                                    </div>
+                                    <button class="btn btn-primary" id="compile-btn">
+                                        <i class="fa-solid fa-gears"></i> Compile App
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right pane: Real-time CLI logs -->
+                        <div class="panel glass flex-col">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-circle-nodes"></i> AST Intent Graph & Compiler Logs</h3>
+                            </div>
+                            <div class="panel-body console-body" id="console-logs">
+                                <div class="console-line system">> Compiler initialized. System ready for NL prompt input.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom intent graph visualization card -->
+                    <div class="panel glass mt-4">
+                        <div class="panel-header">
+                            <h3><i class="fa-solid fa-diagram-project"></i> Intermediate Representation (IR) Graph</h3>
+                        </div>
+                        <div class="panel-body graph-container" id="graph-container">
+                            <div class="empty-placeholder">
+                                <i class="fa-solid fa-network-wired"></i>
+                                <p>Compile an application to visualize the IR dependency graph.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 2: AST & SCHEMAS -->
+                <section class="tab-pane" id="schemas-tab">
+                    <div class="schemas-grid">
+                        <div class="schema-nav panel glass">
+                            <h3>Layers</h3>
+                            <button class="schema-btn active" data-schema="ui">UI Schema</button>
+                            <button class="schema-btn" data-schema="api">API Endpoints</button>
+                            <button class="schema-btn" data-schema="db">Database Tables</button>
+                            <button class="schema-btn" data-schema="auth">Auth & RBAC Rules</button>
+                            <button class="schema-btn" data-schema="rules">Business Logic Rules</button>
+                        </div>
+                        <div class="schema-viewer panel glass flex-col">
+                            <div class="panel-header">
+                                <h3 id="schema-viewer-title">UI Schema JSON</h3>
+                                <button class="btn btn-sm btn-outline" id="copy-schema-btn"><i class="fa-solid fa-copy"></i> Copy JSON</button>
+                            </div>
+                            <pre class="schema-code"><code id="schema-code-block" class="language-json">{ "message": "Compile an application first." }</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 3: VALIDATION MESH & REPAIR -->
+                <section class="tab-pane" id="validation-tab">
+                    <div class="validation-container">
+                        <div class="val-summary-cards">
+                            <div class="val-card glass">
+                                <div class="val-icon red" id="val-errors-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                                <div class="val-info">
+                                    <div class="val-value" id="val-errors-count">0</div>
+                                    <div class="val-label">Validation Errors</div>
+                                </div>
+                            </div>
+                            <div class="val-card glass">
+                                <div class="val-icon yellow" id="val-warnings-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+                                <div class="val-info">
+                                    <div class="val-value" id="val-warnings-count">0</div>
+                                    <div class="val-label">Validation Warnings</div>
+                                </div>
+                            </div>
+                            <div class="val-card glass">
+                                <div class="val-icon green" id="val-status-icon"><i class="fa-solid fa-circle-check"></i></div>
+                                <div class="val-info">
+                                    <div class="val-value" id="val-status-text">PASSED</div>
+                                    <div class="val-label">Status</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel glass mt-4">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-shield-halved"></i> Validation Mesh & Repair Engine Audit Log</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="audit-log-list" id="audit-log-list">
+                                    <div class="empty-placeholder">
+                                        <i class="fa-solid fa-clipboard-check"></i>
+                                        <p>Compile an application to run the Validation Mesh check.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 4: LIVE SANDBOX RUNTIME -->
+                <section class="tab-pane" id="runtime-tab">
+                    <div class="runtime-grid">
+                        <!-- Control panel for simulator -->
+                        <div class="panel glass flex-col" style="flex: 1;">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-sliders"></i> Sandbox Control</h3>
+                            </div>
+                            <div class="panel-body flex-col">
+                                <div class="form-group">
+                                    <label>Active User Identity Role</label>
+                                    <select id="runtime-role-select" class="form-control">
+                                        <option value="Admin">Admin</option>
+                                        <option value="SalesManager">SalesManager</option>
+                                        <option value="User">User</option>
+                                    </select>
+                                    <p class="help-text">Renders the frontend according to UI permissions and enforces request roles in backend APIs.</p>
+                                </div>
+                                <hr class="divider">
+                                <h4>Simulation Test Report</h4>
+                                <div class="sim-report-box" id="sim-report-box">
+                                    <div class="empty-placeholder">
+                                        <p>Compile an application to see simulation checks.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live application viewport mock-up -->
+                        <div class="panel glass flex-col" style="flex: 2.5;">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-window-maximize"></i> Live Compiled Application Viewport</h3>
+                                <div class="viewport-controls">
+                                    <span class="viewport-dot red"></span>
+                                    <span class="viewport-dot yellow"></span>
+                                    <span class="viewport-dot green"></span>
+                                </div>
+                            </div>
+                            <div class="viewport-body" id="sandbox-viewport">
+                                <div class="viewport-empty">
+                                    <i class="fa-solid fa-play-circle"></i>
+                                    <p>Run compilation first to load the dynamic live application runtime.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 5: EVALUATOR SUITE -->
+                <section class="tab-pane" id="evaluation-tab">
+                    <div class="eval-header-panel glass">
+                        <div class="eval-intro">
+                            <h3>Forge AI Benchmark Evaluation Framework</h3>
+                            <p>Runs the compiler pipeline across 20 prompts (10 Standard products + 10 Edge cases) to measure accuracy, speed, and recovery rates.</p>
+                        </div>
+                        <button class="btn btn-primary" id="run-eval-btn">
+                            <i class="fa-solid fa-play"></i> Run Suite Benchmark
+                        </button>
+                    </div>
+
+                    <!-- Metric summaries -->
+                    <div class="eval-metrics-grid mt-4" id="eval-metrics-grid" style="display: none;">
+                        <div class="metric-card glass">
+                            <div class="metric-val" id="metric-success-rate">0%</div>
+                            <div class="metric-lbl">Overall Success Rate</div>
+                        </div>
+                        <div class="metric-card glass">
+                            <div class="metric-val" id="metric-val-pass">0%</div>
+                            <div class="metric-lbl">Initial Validation Pass</div>
+                        </div>
+                        <div class="metric-card glass">
+                            <div class="metric-val" id="metric-repair-rate">0%</div>
+                            <div class="metric-lbl">Repair Success Rate</div>
+                        </div>
+                        <div class="metric-card glass">
+                            <div class="metric-val" id="metric-latency">0s</div>
+                            <div class="metric-lbl">Average Latency</div>
+                        </div>
+                    </div>
+
+                    <!-- Evaluation details table -->
+                    <div class="panel glass mt-4" id="eval-results-panel" style="display: none;">
+                        <div class="panel-header">
+                            <h3>Test Cases Execution Log</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="table-responsive">
+                                <table class="eval-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Test Prompt Name</th>
+                                            <th>Category</th>
+                                            <th>Success</th>
+                                            <th>Initial Pass</th>
+                                            <th>Repair Required</th>
+                                            <th>Latency (s)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="eval-table-body">
+                                        <!-- Populated dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="empty-placeholder panel glass mt-4" id="eval-placeholder">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        <p>Click "Run Suite Benchmark" to execute evaluation dataset.</p>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Compile progress overlay -->
+    <div class="overlay" id="loading-overlay">
+        <div class="loader-box">
+            <div class="spinner"></div>
+            <h4 id="loading-title">Compiling Application...</h4>
+            <p id="loading-subtitle">Extracting user intent...</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
