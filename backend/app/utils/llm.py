@@ -312,30 +312,33 @@ class LLMClient:
             raise e
 
     def call_gemini(self, prompt: str, schema_class: Type[T]) -> dict:
-        """Call Google Gemini API."""
+        """Call Google Gemini API using the new google-genai SDK."""
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=settings.GEMINI_API_KEY)
-            
-            # Using standard gemini model
-            model = genai.GenerativeModel("gemini-1.5-flash")
-            
-            # Request JSON output
+            from google import genai
+            from google.genai import types
+
+            client = genai.Client(api_key=settings.GEMINI_API_KEY)
+
             system_instruction = (
                 "You are an AI compiler system. Output raw JSON only. "
                 "Do not include any chat, markup explanations, or conversational text. "
-                f"The JSON structure MUST follow this JSON schema or Pydantic specification: {schema_class.schema_json()}"
+                f"The JSON structure MUST follow this Pydantic schema: {schema_class.schema_json()}"
             )
-            
-            response = model.generate_content(
-                prompt,
-                generation_config={"response_mime_type": "application/json"},
-                contents=[system_instruction, prompt]
+
+            full_prompt = f"{system_instruction}\n\n{prompt}"
+
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=full_prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json"
+                )
             )
             return json.loads(response.text.strip())
         except Exception as e:
             logger.error(f"Gemini API call failed: {e}. Falling back to OpenAI or Mock.")
             raise e
+
 
     def call_openai(self, prompt: str, schema_class: Type[T]) -> dict:
         """Call OpenAI API."""
