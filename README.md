@@ -1,8 +1,8 @@
-# Forge AI — AI Application Compiler
+# AI-powered Software Builder — AI Application Compiler
 
-Forge AI is a compiler-like AI software generation system that transforms unstructured natural language requirements into fully validated, executable software configurations. 
+AI-powered Software Builder is a compiler-like AI software generation system that transforms unstructured natural language requirements into fully validated, executable software configurations. 
 
-Rather than relying on single-shot LLM prompts (which frequently yield invalid JSON, missing API routes, database mismatches, or broken permission models), Forge AI compiles applications through a modular, multi-stage pipeline, enforcing strict contracts, semantic cross-layer validation, auto-healing repair loops, and execution simulation.
+Rather than relying on single-shot LLM prompts (which frequently yield invalid JSON, missing API routes, database mismatches, or broken permission models), the system compiles applications through a modular, multi-stage pipeline, enforcing strict contracts, semantic cross-layer validation, auto-healing repair loops, and execution simulation.
 
 ---
 

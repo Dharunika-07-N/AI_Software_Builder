@@ -1,1 +1,1 @@
-# Forge AI Backend Application Package
+# AI-powered Software Builder - Backend Application Package

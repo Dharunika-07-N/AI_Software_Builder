@@ -13,10 +13,10 @@ from app.pipeline.stage5_validate import validate_schema
 from app.pipeline.stage6_repair import repair_schema
 from app.runtime.simulator import simulate_execution
 
-logger = logging.getLogger("ForgeAI.Evaluator")
+logger = logging.getLogger("AIBuilder.Evaluator")
 
 def run_evaluation() -> Dict[str, Any]:
-    """Runs the 20-prompt evaluation dataset through the Forge AI compiler pipeline.
+    """Runs the 20-prompt evaluation dataset through the AI-powered Software Builder compiler pipeline.
     Measures and aggregates performance metrics.
     """
     logger.info("Starting Evaluation Framework run...")

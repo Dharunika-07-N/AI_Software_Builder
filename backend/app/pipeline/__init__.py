@@ -1,1 +1,1 @@
-# Forge AI Pipeline package
+# AI-powered Software Builder - Pipeline Package

@@ -3,7 +3,7 @@ import logging
 from typing import Dict, Any, List
 from app.pipeline.models import ApplicationSchema
 
-logger = logging.getLogger("ForgeAI.Simulator")
+logger = logging.getLogger("AIBuilder.Simulator")
 
 def simulate_execution(app_schema: ApplicationSchema) -> Dict[str, Any]:
     """Execution Simulator.

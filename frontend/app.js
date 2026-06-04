@@ -1,4 +1,4 @@
-// Forge AI Frontend Controller
+// AI-powered Software Builder Frontend Controller
 document.addEventListener("DOMContentLoaded", () => {
     // Current compiled application state
     let compiledAppState = null;
@@ -443,14 +443,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="rt-form-group">
                         <label>Select Demo Account Profile</label>
                         <select id="login-preset-select" class="form-control">
-                            <option value="admin@forge.ai|admin123|Admin">Admin User (admin@forge.ai)</option>
-                            <option value="sales@forge.ai|sales123|SalesManager">Sales Manager (sales@forge.ai)</option>
-                            <option value="user@forge.ai|user123|User">Standard User (user@forge.ai)</option>
+                            <option value="admin@builder.ai|admin123|Admin">Admin User (admin@builder.ai)</option>
+                            <option value="sales@builder.ai|sales123|SalesManager">Sales Manager (sales@builder.ai)</option>
+                            <option value="user@builder.ai|user123|User">Standard User (user@builder.ai)</option>
                         </select>
                     </div>
                     <div class="rt-form-group">
                         <label>Email Address</label>
-                        <input type="email" id="login-email-input" class="rt-input" value="admin@forge.ai">
+                        <input type="email" id="login-email-input" class="rt-input" value="admin@builder.ai">
                     </div>
                     <div class="rt-form-group">
                         <label>Password</label>
@@ -651,7 +651,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         clearConsole();
-        logToConsole("Initializing Forge AI Compiler Pipeline...", "system");
+        logToConsole("Initializing AI-powered Software Builder Compiler Pipeline...", "system");
         
         // Show loading screen
         loadingTitle.textContent = "Compiling Application Spec...";

@@ -5,7 +5,7 @@ from typing import Dict, Any, List
 from fastapi import APIRouter, HTTPException, Header, Request
 from app.config import settings
 
-logger = logging.getLogger("ForgeAI.RuntimeEngine")
+logger = logging.getLogger("AIBuilder.RuntimeEngine")
 router = APIRouter(prefix="/api/runtime")
 
 def get_db_connection():

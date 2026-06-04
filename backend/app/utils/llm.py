@@ -7,7 +7,7 @@ from app.config import settings
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("ForgeAI.LLM")
+logger = logging.getLogger("SoftwareBuilder.LLM")
 
 T = TypeVar("T", bound=BaseModel)
 

@@ -25,10 +25,10 @@ from app.evaluation.evaluator import run_evaluation
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("ForgeAI.Server")
+logger = logging.getLogger("SoftwareBuilder.Server")
 
 app = FastAPI(
-    title="Forge AI Application Compiler API",
+    title="AI-powered Software Builder API",
     description="Compiler-like AI system converting natural language to executable application schemas.",
     version="1.0.0"
 )

@@ -1,1 +1,1 @@
-# Forge AI Utilities package
+# AI-powered Software Builder - Utilities Package

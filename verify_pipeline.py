@@ -14,7 +14,7 @@ from app.runtime.simulator import simulate_execution
 
 def main():
     print("====================================================")
-    print("Forge AI Backend Compiler Pipeline Verification Test")
+    print("AI-powered Software Builder Pipeline Verification Test")
     print("====================================================\n")
     
     test_prompt = "Build a CRM with login, contacts, dashboard, role-based access, and premium plan with payments. Admins can see analytics."

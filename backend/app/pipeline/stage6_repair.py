@@ -5,7 +5,7 @@ from app.pipeline.models import (
 )
 import logging
 
-logger = logging.getLogger("ForgeAI.Repair")
+logger = logging.getLogger("AIBuilder.Repair")
 
 def repair_schema(app_schema: ApplicationSchema, validation: ValidationResult) -> RepairResult:
     """Stage 6: Repair Engine.
