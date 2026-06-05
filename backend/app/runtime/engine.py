@@ -49,9 +49,11 @@ def init_runtime_db(db_schema) -> bool:
         # Check if users table exists
         tables_in_db = [t.name.lower() for t in db_schema.tables]
         if "users" in tables_in_db:
-            cursor.execute("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", ("admin@forge.ai", "admin123", "Admin"))
-            cursor.execute("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", ("sales@forge.ai", "sales123", "SalesManager"))
-            cursor.execute("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", ("user@forge.ai", "user123", "User"))
+            # Seed both forge.ai and builder.ai domains to ensure compatibility with all front-end/documentation presets
+            for domain in ["forge.ai", "builder.ai"]:
+                cursor.execute("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", (f"admin@{domain}", "admin123", "Admin"))
+                cursor.execute("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", (f"sales@{domain}", "sales123", "SalesManager"))
+                cursor.execute("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", (f"user@{domain}", "user123", "User"))
             
         # Seed default contacts if contacts table exists
         if "contacts" in tables_in_db:
@@ -95,11 +97,11 @@ async def runtime_login(payload: Dict[str, Any]):
             pass
             
     # Fallback default logins if DB fails or tables don't exist yet
-    if email == "admin@forge.ai" and password == "admin123":
+    if email in ["admin@forge.ai", "admin@builder.ai"] and password == "admin123":
         return {"token": "mock-jwt-token-xyz", "role": "Admin", "email": email}
-    elif email == "sales@forge.ai" and password == "sales123":
+    elif email in ["sales@forge.ai", "sales@builder.ai"] and password == "sales123":
         return {"token": "mock-jwt-token-xyz", "role": "SalesManager", "email": email}
-    elif email == "user@forge.ai" and password == "user123":
+    elif email in ["user@forge.ai", "user@builder.ai"] and password == "user123":
         return {"token": "mock-jwt-token-xyz", "role": "User", "email": email}
         
     raise HTTPException(status_code=401, detail="Invalid email or password.")

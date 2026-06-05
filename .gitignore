@@ -6,12 +6,18 @@
 venv/
 env/
 .venv/
+.venv-1/
+.venv-2/
 .ENV/
+
+# Python bytecode
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 .Python
+
+# Packaging
 *.egg
 *.egg-info/
 dist/
@@ -19,17 +25,16 @@ build/
 .eggs/
 *.whl
 
-# Virtual Environments
-venv/
-env/
-.venv/
-.ENV/
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Databases (runtime files)
 *.db
 *.sqlite
 *.sqlite3
-
+runtime.db
 
 # IDE / Editor
 .vscode/

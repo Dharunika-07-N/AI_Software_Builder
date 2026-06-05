@@ -145,6 +145,33 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 1500);
     });
 
+    function normalizeRoute(route) {
+        if (!route || typeof route !== "string") return "";
+        let normalized = route.trim();
+        if (!normalized.startsWith("/")) normalized = "/" + normalized;
+        normalized = normalized.replace(/\s+/g, "-").toLowerCase();
+        normalized = normalized.replace(/\/+/g, "/");
+        if (normalized.length > 1 && normalized.endsWith("/")) {
+            normalized = normalized.slice(0, -1);
+        }
+        return normalized;
+    }
+
+    function ensurePageSchema(page, index) {
+        return {
+            route: normalizeRoute(page.route || page.title || `/page-${index + 1}`),
+            title: page.title || page.route || `Page ${index + 1}`,
+            description: page.description || page.title || "Live compiled application page generated from the UI schema.",
+            layout: page.layout || "default",
+            components: Array.isArray(page.components) ? page.components : [],
+            ...page
+        };
+    }
+
+    async function waitForRender() {
+        return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    }
+
     // --- Draw Intent Graph ---
     function renderIntentGraph(graph) {
         graphContainer.innerHTML = "";
@@ -309,6 +336,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- Dynamic Live Sandbox Render ---
     runtimeRoleSelect.addEventListener("change", (e) => {
         activeUserRole = e.target.value;
+        
+        // Auto-authenticate standard profiles when switching roles in sandbox control panel
+        mockJwtToken = "mock-jwt-token-xyz";
+        
+        if (compiledAppState) {
+            const ui = compiledAppState.schema.ui || {};
+            const rawPages = Array.isArray(ui.pages) ? ui.pages : [];
+            const pages = rawPages.map((page, idx) => ensurePageSchema(page, idx));
+            const dashboardRoute = pages.find(page => page.route === "/dashboard")?.route;
+            activeRuntimeRoute = dashboardRoute || pages[0]?.route || "/login";
+        }
         renderSandbox();
     });
 
@@ -381,13 +419,28 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const ui = compiledAppState.schema.ui;
-        const pages = Array.isArray(ui.pages) ? ui.pages : [];
+        const ui = compiledAppState.schema.ui || {};
+        const rawPages = Array.isArray(ui.pages) ? ui.pages : [];
+        let pages = rawPages.map((page, idx) => ensurePageSchema(page, idx));
 
+        const navigationPages = Array.isArray(ui.navigation) ? ui.navigation.map((nav, idx) => ({
+            route: normalizeRoute(nav.route || nav.label || `/nav-${idx + 1}`),
+            title: nav.label || nav.route || `Page ${idx + 1}`,
+            description: nav.description || "",
+            layout: "default",
+            components: []
+        })) : [];
+
+        if (pages.length === 0 && navigationPages.length > 0) {
+            pages = navigationPages;
+        }
+
+        const hasLoginPage = pages.some(page => page.route === "/login");
+        const activeClassForLogin = activeRuntimeRoute === "/login" ? "active" : "";
         let navHtml = "";
+
         if (!mockJwtToken) {
-            const activeClass = activeRuntimeRoute === "/login" ? "active" : "";
-            navHtml += `<span class="rt-nav-link ${activeClass}" data-route="/login"><i class="fa-solid fa-sign-in-alt"></i> Login</span>`;
+            navHtml += `<span class="rt-nav-link ${activeClassForLogin}" data-route="/login"><i class="fa-solid fa-sign-in-alt"></i> Login</span>`;
         }
 
         if (pages.length === 0) {
@@ -396,7 +449,7 @@ document.addEventListener("DOMContentLoaded", () => {
             pages.forEach(page => {
                 const activeClass = activeRuntimeRoute === page.route ? "active" : "";
                 const icon = page.props?.icon || "fa-file-lines";
-                navHtml += `<span class="rt-nav-link ${activeClass}" data-route="${page.route}"><i class="fa-solid ${icon}"></i> ${page.title || page.route}</span>`;
+                navHtml += `<span class="rt-nav-link ${activeClass}" data-route="${page.route}"><i class="fa-solid ${icon}"></i> ${page.title}</span>`;
             });
         }
 
@@ -406,7 +459,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const validRoutes = ["/login", ...pages.map(page => page.route)];
         if (!validRoutes.includes(activeRuntimeRoute)) {
-            activeRuntimeRoute = mockJwtToken ? (pages[0]?.route || "/login") : "/login";
+            const dashboardRoute = pages.find(page => page.route === "/dashboard")?.route;
+            activeRuntimeRoute = mockJwtToken ? (dashboardRoute || pages[0]?.route || "/login") : "/login";
         }
 
         sandboxViewport.innerHTML = `
@@ -425,7 +479,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const links = sandboxViewport.querySelectorAll(".rt-nav-link");
         links.forEach(link => {
             link.addEventListener("click", () => {
-                const route = link.getAttribute("data-route");
+                const route = normalizeRoute(link.getAttribute("data-route"));
                 if (link.id === "rt-logout-btn") {
                     mockJwtToken = null;
                     activeRuntimeRoute = "/login";
@@ -820,7 +874,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 mockJwtToken = res.token;
                 activeUserRole = res.role;
                 runtimeRoleSelect.value = res.role;
-                activeRuntimeRoute = "/dashboard";
+
+                const ui = compiledAppState?.schema?.ui || {};
+                const successfulRoute = normalizeRoute(
+                    ui.pages?.find(page => normalizeRoute(page.route) === "/dashboard")?.route ||
+                    ui.pages?.[0]?.route ||
+                    ui.navigation?.[0]?.route ||
+                    "/dashboard"
+                );
+                activeRuntimeRoute = successfulRoute || "/dashboard";
                 renderSandbox();
             } catch (err) {
                 errDiv.textContent = err.message;
@@ -964,18 +1026,49 @@ document.addEventListener("DOMContentLoaded", () => {
                             <div class="val">$${data.total_revenue} <span style="font-size: 0.85rem; color: var(--success); font-weight: normal;">+${data.growth}% MoM</span></div>
                             <div class="lbl" style="margin-bottom: 0.5rem;">Simulating database points...</div>
                             <div style="display: flex; gap: 0.4rem; height: 60px; align-items: flex-end; padding-top: 0.5rem;">
-                                ${data.recent_sales.map(s => `<div style="flex:1; background-color:var(--primary); height:${(s.amount / 1500) * 100}%; border-radius: 4px 4px 0 0;" title="$${s.amount}"></div>`).join('')}
+                                ${Array.isArray(data.recent_sales) ? data.recent_sales.map(s => `<div style="flex:1; background-color:var(--primary); height:${(s.amount / 1500) * 100}%; border-radius: 4px 4px 0 0;" title="$${s.amount}"></div>`).join('') : ''}
                             </div>
                         </div>
                     `;
                 }
             }
-            
-            // FALLBACK DEFAULT BUTTON
-            else {
+
+            else if (comp.type === "button" || comp.type === "link") {
+                const action = comp.props?.action || "";
                 container.innerHTML = `<button class="rt-submit-btn">${comp.label}</button>`;
+                const btn = container.querySelector("button");
+                btn.addEventListener("click", () => {
+                    if (action === "process_payment" || action === "upgrade") {
+                        alert("This action would process a payment or upgrade in a real application.");
+                    } else if (action === "login") {
+                        activeRuntimeRoute = "/login";
+                        renderSandbox();
+                    } else {
+                        alert(`Action triggered: ${action || comp.label}`);
+                    }
+                });
             }
-            
+
+            else if (["text", "paragraph", "description"].includes(comp.type)) {
+                const contentText = comp.props?.text || comp.props?.content || comp.label || "Text content not available.";
+                container.innerHTML = `<div class="rt-card"><p>${contentText}</p></div>`;
+            }
+
+            else if (comp.type === "list") {
+                const items = Array.isArray(comp.props?.items) ? comp.props.items : [];
+                container.innerHTML = `
+                    <div class="rt-card">
+                        <ul>${items.map(item => `<li>${item}</li>`).join("")}</ul>
+                    </div>`;
+            }
+
+            else {
+                const fallbackText = comp.props?.text || comp.props?.content || comp.label || `Unsupported component type: ${comp.type}`;
+                container.innerHTML = `
+                    <div class="rt-card">
+                        <p>${fallbackText}</p>
+                    </div>`;
+            }
         } catch (err) {
             container.innerHTML = `<div style="color: var(--error); font-size: 0.85rem;"><i class="fa-solid fa-circle-exclamation"></i> Error: ${err.message}</div>`;
         }
@@ -985,53 +1078,82 @@ document.addEventListener("DOMContentLoaded", () => {
     compileBtn.addEventListener("click", async () => {
         const prompt = promptInput.value.trim();
         if (!prompt) {
-            alert("Please enter a software specification prompt first.");
+            alert("Please enter an application prompt before compiling.");
             return;
         }
 
-        clearConsole();
-        logToConsole("Initializing AI-powered Software Builder Compiler Pipeline...", "system");
-        
-        // Show loading screen
-        loadingTitle.textContent = "Compiling Application Spec...";
-        loadingSubtitle.textContent = "Booting Multi-Stage Pipeline...";
         loadingOverlay.style.display = "flex";
-        
+        loadingTitle.textContent = "Compiling Application...";
+
+        // Define visual progress stages with realistic, staggered timing (800ms per stage)
+        const visualSteps = [
+            { subtitle: "Stage 1: Intent Extraction Layer...", log: "Stage 1: Parsing natural language user intent..." },
+            { subtitle: "Stage 2: Graph Builder (Intermediate Representation)...", log: "Stage 2: Building compiler AST Intent Graph..." },
+            { subtitle: "Stage 3: System Design / Architecture Planner...", log: "Stage 3: Planning system architecture and access matrices..." },
+            { subtitle: "Stage 4: Schema Generator...", log: "Stage 4: Synthesizing UI configs, API routes, and DB models..." },
+            { subtitle: "Stage 5: Validation Mesh...", log: "Stage 5: Verifying cross-layer API & DB referential contracts..." }
+        ];
+
         try {
-            loadingSubtitle.textContent = "Stage 1: Intent Extraction Layer...";
-            logToConsole("Stage 1: Parsing natural language user intent...", "info");
-            
-            loadingSubtitle.textContent = "Stage 2: Graph Builder (Intermediate Representation)...";
-            logToConsole("Stage 2: Building compiler AST Intent Graph...", "info");
-            
-            loadingSubtitle.textContent = "Stage 3: System Design / Architecture Planner...";
-            logToConsole("Stage 3: Planning system architecture and access matrices...", "info");
-            
-            loadingSubtitle.textContent = "Stage 4: Schema Generator...";
-            logToConsole("Stage 4: Synthesizing UI configs, API routes, and DB models...", "info");
-            
-            loadingSubtitle.textContent = "Stage 5: Validation Mesh...";
-            logToConsole("Stage 5: Verifying cross-layer API & DB referential contracts...", "info");
-            
-            // Call API
-            const response = await fetch("/api/generate", {
+            // Trigger API request in parallel
+            const apiPromise = fetch("/api/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ prompt })
             });
-            
+
+            // Display visual progress stages one by one
+            for (const step of visualSteps) {
+                loadingSubtitle.textContent = step.subtitle;
+                logToConsole(step.log, "info");
+                await new Promise(resolve => setTimeout(resolve, 800));
+            }
+
+            // Monitor api completion state
+            let apiResolved = false;
+            let response = null;
+            let apiError = null;
+
+            apiPromise.then(res => {
+                apiResolved = true;
+                response = res;
+            }).catch(err => {
+                apiResolved = true;
+                apiError = err;
+            });
+
+            // Advance through Stage 6 & 7 if the API is still processing
+            let currentExtraStage = 6;
+            while (!apiResolved) {
+                if (currentExtraStage === 6) {
+                    loadingSubtitle.textContent = "Stage 6: Repair Engine (Auto-healing)...";
+                    logToConsole("Stage 6: Running auto-healing structural integrity checks...", "info");
+                } else if (currentExtraStage === 7) {
+                    loadingSubtitle.textContent = "Stage 7: Execution Simulator...";
+                    logToConsole("Stage 7: Simulating database initialization & routing tables...", "info");
+                } else {
+                    loadingSubtitle.textContent = "Finalizing compilation environment...";
+                }
+                currentExtraStage++;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            if (apiError) {
+                throw apiError;
+            }
+
             if (!response.ok) {
                 throw new Error("Compilation server failed to respond.");
             }
-            
+
             const data = await response.json();
             compiledAppState = data;
-            
+
             // Log results to console
             logToConsole(`Stage 1 Intent Extracted: App Type: '${data.intent.application_name}'`, "success");
             logToConsole(`Stage 2 Graph created: ${data.graph.nodes.length} nodes, ${data.graph.edges.length} edges`, "success");
             logToConsole(`Stage 3 Architecture: ${data.design.modules.length} active modules planned`, "success");
-            
+
             // Check initial validation
             if (data.validation_initial.is_valid) {
                 logToConsole("Stage 5 Validation Mesh: PASSED with 0 errors.", "success");
@@ -1040,35 +1162,35 @@ document.addEventListener("DOMContentLoaded", () => {
                 data.repair_logs.forEach(log => {
                     logToConsole(`Stage 6 Repair Engine: [${log.layer}] Fixed error: ${log.action_taken}`, "success");
                 });
-                
+
                 if (data.repair_success) {
                     logToConsole("Stage 6 Repair Engine: Schema healed successfully. Re-running validation... PASSED.", "success");
                 } else {
                     logToConsole("Stage 6 Repair Engine: Mismatches remain unresolved. Manual intervention required.", "error");
                 }
             }
-            
+
             logToConsole(`Stage 7 Execution Simulator: SQLite DB Status: ${data.simulator_report.database_creation}`, data.simulator_report.status === "PASS" ? "success" : "error");
-            
+
             if (data.live_runtime_active) {
                 logToConsole("Sandbox Runtime successfully launched on local dev server.", "success");
             }
-            
+
             // Render everything
             renderIntentGraph(data.graph);
             renderValidationMesh(data);
             renderSimulationReport(data.simulator_report);
-            
-            // Reset active route
+            renderSandbox();
+
+            // Reset runtime state to show login page first
             activeRuntimeRoute = "/login";
             mockJwtToken = null;
-            
+
             // Move status indicator to compiled
             const indicator = document.getElementById("compiler-status-indicator");
             indicator.innerHTML = '<span class="status-dot green"></span> Compiled Ready';
-            
+
             logToConsole("Compilation Complete. Sandboxed workspace loaded.", "system");
-            
         } catch (err) {
             logToConsole(`Compilation Error: ${err.message}`, "error");
             alert(err.message);
