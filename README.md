@@ -13,7 +13,6 @@ Rather than relying on single-shot LLM prompts (which frequently yield invalid J
 4. **Intelligent Repair Engine (Stage 6)**: Automatically self-heals mismatches (e.g. auto-inserts missing primary keys, injects missing DB fields requested by APIs, creates API routes for UI buttons, and registers undefined roles).
 5. **Execution Simulator (Stage 7)**: Compiles schemas onto an in-memory SQLite database, runs schema structures, and checks RBAC endpoints to verify execution readiness.
 6. **Dynamic Live Runtime Engine**: Mounts dynamic CRUD routers on FastAPI that communicate with a live SQLite backend. The frontend parses the UI schema dynamically to render page routes, forms, and data tables—permitting full, interactive application testing immediately.
-7. **Evaluation Benchmark Suite**: Measures pipeline success rates, latencies, repair triggers, and validation statistics across 20 prompts (10 products + 10 edge cases).
 
 ---
 
@@ -101,10 +100,6 @@ AI_software_builder/
 │   │   │   ├── __init__.py
 │   │   │   ├── simulator.py     # SQLite test compiler (Stage 7)
 │   │   │   └── engine.py        # SQLite live database dynamic CRUD routes
-│   │   └── evaluation/          # Benchmarking framework
-│   │       ├── __init__.py
-│   │       ├── dataset.py       # 10 standard & 10 edge case prompts
-│   │       └── evaluator.py     # Runner executing pipeline and reporting metrics
 │   └── requirements.txt         # Backend Python packages
 ├── frontend/
 │   ├── index.html               # Main dashboard viewport
@@ -146,7 +141,7 @@ OPENAI_API_KEY=your-openai-api-key
 GEMINI_API_KEY=your-gemini-api-key
 MOCK_MODE=false
 ```
-*Note: If no API keys are provided or `MOCK_MODE=true` is set, the system compiles in a deterministic mock mode using highly detailed application templates. This enables instant local verification and full evaluation testing with zero API billing.*
+*Note: If no API keys are provided or `MOCK_MODE=true` is set, the system compiles in a deterministic mock mode using highly detailed application templates. This enables instant local verification and zero API billing for local testing.*
 
 ---
 
@@ -175,4 +170,3 @@ This serves the custom, glass-themed web interface:
 - **AST & Schemas Tab**: Inspect the JSON schemas generated for the UI, API endpoints, SQL DB, and RBAC auth.
 - **Validation Mesh Tab**: View compilation validation reports and repair engine healing actions.
 - **Live Sandbox Tab**: Test the compiled application dynamically! Fill in forms to insert data, fetch tables, change access roles (e.g. Admin, SalesManager, User) and verify permission barriers on live SQLite records.
-- **Evaluator Suite Tab**: Click **Run Suite Benchmark** to evaluate the pipeline across the 20-prompt dataset and inspect latency, success rate, and repair metrics.

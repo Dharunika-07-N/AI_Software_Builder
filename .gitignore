@@ -30,8 +30,6 @@ env/
 *.sqlite
 *.sqlite3
 
-# Evaluation output
-evaluation_report.json
 
 # IDE / Editor
 .vscode/

@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Header, Request
 from app.config import settings
 
 logger = logging.getLogger("AIBuilder.RuntimeEngine")
-router = APIRouter(prefix="/api/runtime")
+router = APIRouter(prefix="/api")
 
 def get_db_connection():
     """Get connection to the dynamic SQLite database."""

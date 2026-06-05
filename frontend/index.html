@@ -34,9 +34,6 @@
                 <button class="nav-item" data-tab="runtime-tab">
                     <i class="fa-solid fa-play"></i> <span>Live Sandbox</span>
                 </button>
-                <button class="nav-item" data-tab="evaluation-tab">
-                    <i class="fa-solid fa-chart-line"></i> <span>Evaluator Suite</span>
-                </button>
             </nav>
             <div class="sidebar-footer">
                 <div class="mode-badge">
@@ -224,71 +221,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </section>
-
-                <!-- TAB 5: EVALUATOR SUITE -->
-                <section class="tab-pane" id="evaluation-tab">
-                    <div class="eval-header-panel glass">
-                        <div class="eval-intro">
-                            <h3>AI-powered Software Builder Benchmark Framework</h3>
-                            <p>Runs the compiler pipeline across 20 prompts (10 Standard products + 10 Edge cases) to measure accuracy, speed, and recovery rates.</p>
-                        </div>
-                        <button class="btn btn-primary" id="run-eval-btn">
-                            <i class="fa-solid fa-play"></i> Run Suite Benchmark
-                        </button>
-                    </div>
-
-                    <!-- Metric summaries -->
-                    <div class="eval-metrics-grid mt-4" id="eval-metrics-grid" style="display: none;">
-                        <div class="metric-card glass">
-                            <div class="metric-val" id="metric-success-rate">0%</div>
-                            <div class="metric-lbl">Overall Success Rate</div>
-                        </div>
-                        <div class="metric-card glass">
-                            <div class="metric-val" id="metric-val-pass">0%</div>
-                            <div class="metric-lbl">Initial Validation Pass</div>
-                        </div>
-                        <div class="metric-card glass">
-                            <div class="metric-val" id="metric-repair-rate">0%</div>
-                            <div class="metric-lbl">Repair Success Rate</div>
-                        </div>
-                        <div class="metric-card glass">
-                            <div class="metric-val" id="metric-latency">0s</div>
-                            <div class="metric-lbl">Average Latency</div>
-                        </div>
-                    </div>
-
-                    <!-- Evaluation details table -->
-                    <div class="panel glass mt-4" id="eval-results-panel" style="display: none;">
-                        <div class="panel-header">
-                            <h3>Test Cases Execution Log</h3>
-                        </div>
-                        <div class="panel-body">
-                            <div class="table-responsive">
-                                <table class="eval-table">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Test Prompt Name</th>
-                                            <th>Category</th>
-                                            <th>Success</th>
-                                            <th>Initial Pass</th>
-                                            <th>Repair Required</th>
-                                            <th>Latency (s)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="eval-table-body">
-                                        <!-- Populated dynamically -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="empty-placeholder panel glass mt-4" id="eval-placeholder">
-                        <i class="fa-solid fa-gauge-high"></i>
-                        <p>Click "Run Suite Benchmark" to execute evaluation dataset.</p>
                     </div>
                 </section>
 

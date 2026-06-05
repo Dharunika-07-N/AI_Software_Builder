@@ -20,9 +20,6 @@ from app.pipeline.stage6_repair import repair_schema
 from app.runtime.simulator import simulate_execution
 from app.runtime.engine import router as runtime_router, init_runtime_db
 
-# Import evaluation framework
-from app.evaluation.evaluator import run_evaluation
-
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SoftwareBuilder.Server")
@@ -41,9 +38,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Mount the dynamic live runtime CRUD router
-app.include_router(runtime_router)
 
 @app.post("/api/generate")
 async def generate_application(payload: Dict[str, str] = Body(...)):
@@ -115,15 +109,8 @@ async def generate_application(payload: Dict[str, str] = Body(...)):
         logger.error("Pipeline compilation crashed:", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Compiler internal error: {str(e)}")
 
-@app.post("/api/evaluate")
-async def trigger_evaluation():
-    """Runs the 20-prompt evaluation dataset through the pipeline and returns aggregated metrics."""
-    try:
-        report = run_evaluation()
-        return report
-    except Exception as e:
-        logger.error("Evaluation framework crashed:", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Evaluator internal error: {str(e)}")
+# Mount the dynamic live runtime CRUD router after the compile endpoint to prevent route collisions.
+app.include_router(runtime_router)
 
 # Mount frontend client. Check if frontend folder exists.
 frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend"))

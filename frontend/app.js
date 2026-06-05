@@ -34,12 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const simReportBox = document.getElementById("sim-report-box");
     const sandboxViewport = document.getElementById("sandbox-viewport");
     
-    const runEvalBtn = document.getElementById("run-eval-btn");
-    const evalMetricsGrid = document.getElementById("eval-metrics-grid");
-    const evalResultsPanel = document.getElementById("eval-results-panel");
-    const evalTableBody = document.getElementById("eval-table-body");
-    const evalPlaceholder = document.getElementById("eval-placeholder");
-    
     const loadingOverlay = document.getElementById("loading-overlay");
     const loadingTitle = document.getElementById("loading-title");
     const loadingSubtitle = document.getElementById("loading-subtitle");
@@ -70,9 +64,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 pageTitle.textContent = "Live Application Sandbox";
                 pageSubtitle.textContent = "Interact with the dynamically compiled application using live SQLite records.";
                 renderSandbox();
-            } else if (targetTab === "evaluation-tab") {
-                pageTitle.textContent = "Automated Evaluation Framework";
-                pageSubtitle.textContent = "Benchmark the multi-stage compiler against a suite of 20 test prompts.";
             }
         });
     });
@@ -343,6 +334,43 @@ document.addEventListener("DOMContentLoaded", () => {
         return res.json();
     }
 
+    // Sample data for the interactive sandbox
+    const sampleData = {
+        users: [
+            { id: 1, email: "admin@builder.ai", name: "Alice Johnson", role: "Admin", created_at: "2024-01-10", status: "Active" },
+            { id: 2, email: "sales@builder.ai", name: "Bob Smith", role: "SalesManager", created_at: "2024-02-15", status: "Active" },
+            { id: 3, email: "user@builder.ai", name: "Carol Davis", role: "User", created_at: "2024-03-05", status: "Active" }
+        ],
+        contacts: [
+            { id: 1, name: "Acme Corp", email: "contact@acme.com", phone: "555-0101", company: "Acme Inc", status: "Prospect" },
+            { id: 2, name: "Tech Solutions", email: "sales@techsol.com", phone: "555-0102", company: "Tech Solutions", status: "Client" },
+            { id: 3, name: "Global Industries", email: "info@global.com", phone: "555-0103", company: "Global Industries", status: "Client" },
+            { id: 4, name: "Innovation Labs", email: "contact@innolab.com", phone: "555-0104", company: "Innovation Labs", status: "Lead" }
+        ],
+        products: [
+            { id: 1, name: "Pro Starter Pack", sku: "PSP-001", price: 29.99, category: "Subscription", stock: 150, rating: 4.5 },
+            { id: 2, name: "Enterprise Bundle", sku: "EB-001", price: 99.99, category: "Subscription", stock: 75, rating: 4.8 },
+            { id: 3, name: "Premium Plus", sku: "PP-001", price: 49.99, category: "Upgrade", stock: 200, rating: 4.7 },
+            { id: 4, name: "Lite Free Tier", sku: "LFT-001", price: 0.00, category: "Free", stock: -1, rating: 4.2 }
+        ],
+        orders: [
+            { id: 101, customer: "Acme Corp", amount: 1299.99, status: "Completed", date: "2024-11-28", items: 3 },
+            { id: 102, customer: "Tech Solutions", amount: 599.99, status: "Pending", date: "2024-11-29", items: 2 },
+            { id: 103, customer: "Global Industries", amount: 2499.99, status: "Completed", date: "2024-11-27", items: 5 }
+        ],
+        analytics: {
+            total_revenue: 45230,
+            growth: 24,
+            recent_sales: [
+                { id: 1, amount: 1200, date: "Nov 28" },
+                { id: 2, amount: 950, date: "Nov 29" },
+                { id: 3, amount: 1500, date: "Nov 30" },
+                { id: 4, amount: 800, date: "Dec 1" },
+                { id: 5, amount: 1300, date: "Dec 2" }
+            ]
+        }
+    };
+
     async function renderSandbox() {
         if (!compiledAppState) {
             sandboxViewport.innerHTML = `
@@ -354,29 +382,39 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const ui = compiledAppState.schema.ui;
-        
-        // Build navigation
+        const pages = Array.isArray(ui.pages) ? ui.pages : [];
+
         let navHtml = "";
-        ui.navigation.forEach(nav => {
-            const activeClass = activeRuntimeRoute === nav.route ? "active" : "";
-            navHtml += `<span class="rt-nav-link ${activeClass}" data-route="${nav.route}">${nav.label}</span>`;
-        });
-        
-        // Add Login navigation link if not logged in
         if (!mockJwtToken) {
             const activeClass = activeRuntimeRoute === "/login" ? "active" : "";
-            navHtml = `<span class="rt-nav-link ${activeClass}" data-route="/login">Login</span>` + navHtml;
-        } else {
-            navHtml += `<span class="rt-nav-link" id="rt-logout-btn">Logout</span>`;
+            navHtml += `<span class="rt-nav-link ${activeClass}" data-route="/login"><i class="fa-solid fa-sign-in-alt"></i> Login</span>`;
         }
 
-        // Render viewport layout framework
+        if (pages.length === 0) {
+            navHtml += `<span class="rt-nav-link active" data-route="/empty"><i class="fa-solid fa-file-circle-exclamation"></i> No pages configured</span>`;
+        } else {
+            pages.forEach(page => {
+                const activeClass = activeRuntimeRoute === page.route ? "active" : "";
+                const icon = page.props?.icon || "fa-file-lines";
+                navHtml += `<span class="rt-nav-link ${activeClass}" data-route="${page.route}"><i class="fa-solid ${icon}"></i> ${page.title || page.route}</span>`;
+            });
+        }
+
+        if (mockJwtToken) {
+            navHtml += `<span class="rt-nav-link" id="rt-logout-btn"><i class="fa-solid fa-sign-out-alt"></i> Logout</span>`;
+        }
+
+        const validRoutes = ["/login", ...pages.map(page => page.route)];
+        if (!validRoutes.includes(activeRuntimeRoute)) {
+            activeRuntimeRoute = mockJwtToken ? (pages[0]?.route || "/login") : "/login";
+        }
+
         sandboxViewport.innerHTML = `
             <div class="rt-layout">
                 <div class="rt-navbar">
-                    <div class="rt-brand">${compiledAppState.intent.application_name}</div>
+                    <div class="rt-brand"><i class="fa-solid fa-rocket"></i> ${compiledAppState.intent.application_name}</div>
                     <div class="rt-nav-links">${navHtml}</div>
-                    <div class="rt-role-badge">${activeUserRole} View</div>
+                    <div class="rt-role-badge"><i class="fa-solid fa-user-circle"></i> ${activeUserRole}</div>
                 </div>
                 <div class="rt-body" id="rt-body-content">
                     <div class="loader-box" style="margin-top: 5rem;"><div class="spinner"></div></div>
@@ -384,7 +422,6 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
         `;
 
-        // Register navigation event listeners
         const links = sandboxViewport.querySelectorAll(".rt-nav-link");
         links.forEach(link => {
             link.addEventListener("click", () => {
@@ -400,38 +437,340 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
 
-        // Load the content of the active route
         const rtBody = document.getElementById("rt-body-content");
-        
         if (activeRuntimeRoute === "/login") {
             renderLoginPage(rtBody);
             return;
         }
 
-        const page = ui.pages.find(p => p.route === activeRuntimeRoute);
-        if (!page) {
-            rtBody.innerHTML = `<div class="rt-card"><h4>404 Page Not Found</h4><p>The route ${activeRuntimeRoute} is not defined in the UI schema.</p></div>`;
+        if (!mockJwtToken) {
+            rtBody.innerHTML = `<div class="rt-card" style="text-align: center; margin-top: 3rem;"><h3>Please login to continue</h3></div>`;
+            activeRuntimeRoute = "/login";
+            renderSandbox();
             return;
         }
 
-        // Render standard pages
-        rtBody.innerHTML = `
-            <h3 style="margin-bottom: 1rem; color: #F8FAFC">${page.title}</h3>
-            <div class="rt-grid" id="rt-page-grid"></div>
-        `;
-        const rtGrid = document.getElementById("rt-page-grid");
-        
-        // Loop components
-        for (const comp of page.components) {
-            const card = document.createElement("div");
-            card.className = "rt-card";
-            card.id = `rt-comp-${comp.id}`;
-            card.innerHTML = `<h4>${comp.label}</h4><div class="rt-comp-content"><div class="spinner" style="width: 25px; height: 25px; margin: auto;"></div></div>`;
-            rtGrid.appendChild(card);
-            
-            // Load components asynchronously
-            loadSandboxComponent(comp, card.querySelector(".rt-comp-content"));
+        const currentPage = pages.find(page => page.route === activeRuntimeRoute);
+        if (!currentPage) {
+            rtBody.innerHTML = `<div class="rt-card" style="text-align: center; margin-top: 3rem;"><h3>Page not found for route ${activeRuntimeRoute}</h3></div>`;
+            return;
         }
+
+        await renderPageFromSchema(rtBody, currentPage);
+    }
+
+    async function renderPageFromSchema(container, page) {
+        container.innerHTML = "";
+        const wrapper = document.createElement("div");
+        wrapper.className = "rt-page-wrapper";
+        wrapper.innerHTML = `
+            <div class="rt-page-header">
+                <h2><i class="fa-solid fa-window-maximize"></i> ${page.title || page.route}</h2>
+                <p>${page.description || "Live compiled application page generated from the UI schema."}</p>
+            </div>
+        `;
+
+        const content = document.createElement("div");
+        content.className = "rt-page-content";
+
+        if (!page.components || page.components.length === 0) {
+            content.innerHTML = `<div class="rt-card" style="text-align:center;">This page has no components defined in the compiled schema.</div>`;
+        } else {
+            for (const comp of page.components) {
+                const compWrapper = document.createElement("div");
+                compWrapper.className = "rt-component-card";
+                compWrapper.innerHTML = `
+                    <div class="rt-component-header">
+                        <div>
+                            <h4>${comp.label || comp.type}</h4>
+                            <small>${comp.type}</small>
+                        </div>
+                    </div>
+                    <div class="rt-component-body" id="component-${comp.id}">
+                        <div class="loader-box"><div class="spinner"></div></div>
+                    </div>
+                `;
+                content.appendChild(compWrapper);
+                const target = compWrapper.querySelector(`#component-${comp.id}`);
+                await loadSandboxComponent(comp, target);
+            }
+        }
+
+        wrapper.appendChild(content);
+        container.appendChild(wrapper);
+    }
+
+    function renderDemoPage(container, route) {
+        let content = "";
+
+        if (route === "/dashboard") {
+            content = `
+                <div class="rt-page-header">
+                    <h2><i class="fa-solid fa-chart-line"></i> Dashboard</h2>
+                    <p>Welcome back! Here's your business overview.</p>
+                </div>
+                <div class="rt-stats-grid">
+                    <div class="rt-stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-value">12</div>
+                            <div class="stat-label">Active Contacts</div>
+                        </div>
+                    </div>
+                    <div class="rt-stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-shopping-cart"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-value">8</div>
+                            <div class="stat-label">Recent Orders</div>
+                        </div>
+                    </div>
+                    <div class="rt-stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-dollar-sign"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-value">$45.2K</div>
+                            <div class="stat-label">Total Revenue</div>
+                        </div>
+                    </div>
+                    <div class="rt-stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-trending-up"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-value">+24%</div>
+                            <div class="stat-label">Growth Rate</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rt-grid">
+                    <div class="rt-card" style="grid-column: span 2;">
+                        <h4><i class="fa-solid fa-chart-bar"></i> Revenue Trend</h4>
+                        <div class="chart-container">
+                            <div class="chart-bar-group">
+                                ${sampleData.analytics.recent_sales.map(s => 
+                                    `<div class="chart-bar" title="$${s.amount}">
+                                        <div class="bar-fill" style="height: ${(s.amount / 1500) * 100}%"></div>
+                                        <div class="bar-label">${s.date}</div>
+                                    </div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rt-card">
+                        <h4><i class="fa-solid fa-list"></i> Recent Orders</h4>
+                        <div class="mini-table">
+                            ${sampleData.orders.slice(0, 3).map(o => `
+                                <div class="mini-row">
+                                    <span>#${o.id}</span>
+                                    <span>${o.customer}</span>
+                                    <span class="badge badge-${o.status === 'Completed' ? 'success' : 'warning'}">${o.status}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (route === "/contacts") {
+            content = `
+                <div class="rt-page-header">
+                    <h2><i class="fa-solid fa-address-book"></i> Contacts Management</h2>
+                    <button class="rt-btn-add" id="add-contact-btn"><i class="fa-solid fa-plus"></i> Add Contact</button>
+                </div>
+                <div class="rt-card">
+                    <div class="rt-table-wrapper">
+                        <table class="rt-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Company</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sampleData.contacts.map(c => `
+                                    <tr>
+                                        <td><strong>${c.name}</strong></td>
+                                        <td>${c.email}</td>
+                                        <td>${c.phone}</td>
+                                        <td>${c.company}</td>
+                                        <td><span class="badge badge-${c.status === 'Client' ? 'success' : c.status === 'Prospect' ? 'info' : 'warning'}">${c.status}</span></td>
+                                        <td>
+                                            <button class="rt-btn-sm rt-btn-edit" title="Edit"><i class="fa-solid fa-edit"></i></button>
+                                            <button class="rt-btn-sm rt-btn-delete" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="contact-modal" class="rt-modal" style="display: none;">
+                    <div class="rt-modal-content">
+                        <div class="rt-modal-header">
+                            <h3>Add New Contact</h3>
+                            <button class="rt-modal-close">&times;</button>
+                        </div>
+                        <form id="contact-form" class="rt-form">
+                            <div class="rt-form-group">
+                                <label>Name</label>
+                                <input type="text" class="rt-input" name="name" required>
+                            </div>
+                            <div class="rt-form-group">
+                                <label>Email</label>
+                                <input type="email" class="rt-input" name="email" required>
+                            </div>
+                            <div class="rt-form-group">
+                                <label>Phone</label>
+                                <input type="tel" class="rt-input" name="phone" required>
+                            </div>
+                            <div class="rt-form-group">
+                                <label>Company</label>
+                                <input type="text" class="rt-input" name="company" required>
+                            </div>
+                            <div class="rt-form-group">
+                                <label>Status</label>
+                                <select class="rt-input" name="status">
+                                    <option>Lead</option>
+                                    <option>Prospect</option>
+                                    <option>Client</option>
+                                </select>
+                            </div>
+                            <div class="rt-form-actions">
+                                <button type="submit" class="rt-btn rt-btn-primary">Save Contact</button>
+                                <button type="button" class="rt-btn rt-btn-secondary rt-modal-close">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        } else if (route === "/products") {
+            content = `
+                <div class="rt-page-header">
+                    <h2><i class="fa-solid fa-box"></i> Product Catalog</h2>
+                    <button class="rt-btn-add" id="add-product-btn"><i class="fa-solid fa-plus"></i> Add Product</button>
+                </div>
+                <div class="rt-products-grid">
+                    ${sampleData.products.map(p => `
+                        <div class="rt-product-card">
+                            <div class="product-header">
+                                <h4>${p.name}</h4>
+                                <span class="product-sku">${p.sku}</span>
+                            </div>
+                            <div class="product-content">
+                                <div class="product-price">$${p.price.toFixed(2)}</div>
+                                <div class="product-meta">
+                                    <span class="badge">${p.category}</span>
+                                    <span class="stock-indicator ${p.stock > 100 ? 'in-stock' : p.stock > 0 ? 'low-stock' : 'out-of-stock'}">
+                                        ${p.stock > 0 ? `${p.stock} in stock` : 'Out of stock'}
+                                    </span>
+                                </div>
+                                <div class="product-rating">
+                                    <i class="fa-solid fa-star"></i> ${p.rating} / 5.0
+                                </div>
+                            </div>
+                            <div class="product-actions">
+                                <button class="rt-btn rt-btn-sm rt-btn-primary">View</button>
+                                <button class="rt-btn rt-btn-sm rt-btn-secondary">Edit</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else if (route === "/orders") {
+            content = `
+                <div class="rt-page-header">
+                    <h2><i class="fa-solid fa-receipt"></i> Orders</h2>
+                    <button class="rt-btn-add" id="create-order-btn"><i class="fa-solid fa-plus"></i> New Order</button>
+                </div>
+                <div class="rt-card">
+                    <div class="rt-table-wrapper">
+                        <table class="rt-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Items</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sampleData.orders.map(o => `
+                                    <tr>
+                                        <td><strong>#${o.id}</strong></td>
+                                        <td>${o.customer}</td>
+                                        <td class="currency">$${o.amount.toFixed(2)}</td>
+                                        <td>${o.items}</td>
+                                        <td>${o.date}</td>
+                                        <td><span class="badge badge-${o.status === 'Completed' ? 'success' : 'warning'}">${o.status}</span></td>
+                                        <td>
+                                            <button class="rt-btn-sm rt-btn-view" title="View"><i class="fa-solid fa-eye"></i></button>
+                                            <button class="rt-btn-sm rt-btn-edit" title="Edit"><i class="fa-solid fa-edit"></i></button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = content;
+
+        // Add event listeners for modal/actions
+        const addContactBtn = container.querySelector("#add-contact-btn");
+        const addProductBtn = container.querySelector("#add-product-btn");
+        const createOrderBtn = container.querySelector("#create-order-btn");
+
+        if (addContactBtn) {
+            addContactBtn.addEventListener("click", () => {
+                const modal = container.querySelector("#contact-modal");
+                modal.style.display = "flex";
+                setupModalListeners(container);
+            });
+        }
+
+        if (addProductBtn) {
+            addProductBtn.addEventListener("click", () => {
+                alert("Product addition feature would open a form here!");
+            });
+        }
+
+        if (createOrderBtn) {
+            createOrderBtn.addEventListener("click", () => {
+                alert("Order creation feature would open a checkout form here!");
+            });
+        }
+
+        // Setup modal close buttons
+        setupModalListeners(container);
+    }
+
+    function setupModalListeners(container) {
+        const closeButtons = container.querySelectorAll(".rt-modal-close");
+        closeButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const modal = btn.closest(".rt-modal");
+                if (modal) modal.style.display = "none";
+            });
+        });
+
+        const forms = container.querySelectorAll("#contact-form");
+        forms.forEach(form => {
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+                alert("Contact saved successfully!");
+                const modal = form.closest(".rt-modal");
+                if (modal) modal.style.display = "none";
+                renderSandbox();
+            });
+        });
     }
 
     function renderLoginPage(container) {
@@ -477,7 +816,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const errDiv = document.getElementById("login-error-msg");
             
             try {
-                const res = await makeRuntimeRequest("/api/runtime/auth/login", "POST", { email, password });
+                const res = await makeRuntimeRequest("/api/auth/login", "POST", { email, password });
                 mockJwtToken = res.token;
                 activeUserRole = res.role;
                 runtimeRoleSelect.value = res.role;
@@ -659,28 +998,18 @@ document.addEventListener("DOMContentLoaded", () => {
         loadingOverlay.style.display = "flex";
         
         try {
-            // Configure API overrides (mock mode)
-            const forceMock = apiOverrideToggle.checked;
-            
-            // Wait brief moment for UX animation
-            await new Promise(r => setTimeout(r, 600));
-            
             loadingSubtitle.textContent = "Stage 1: Intent Extraction Layer...";
             logToConsole("Stage 1: Parsing natural language user intent...", "info");
             
-            await new Promise(r => setTimeout(r, 600));
             loadingSubtitle.textContent = "Stage 2: Graph Builder (Intermediate Representation)...";
             logToConsole("Stage 2: Building compiler AST Intent Graph...", "info");
             
-            await new Promise(r => setTimeout(r, 600));
             loadingSubtitle.textContent = "Stage 3: System Design / Architecture Planner...";
             logToConsole("Stage 3: Planning system architecture and access matrices...", "info");
             
-            await new Promise(r => setTimeout(r, 600));
             loadingSubtitle.textContent = "Stage 4: Schema Generator...";
             logToConsole("Stage 4: Synthesizing UI configs, API routes, and DB models...", "info");
             
-            await new Promise(r => setTimeout(r, 600));
             loadingSubtitle.textContent = "Stage 5: Validation Mesh...";
             logToConsole("Stage 5: Verifying cross-layer API & DB referential contracts...", "info");
             
@@ -748,55 +1077,4 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // --- Run Evaluation Benchmark Suite ---
-    runEvalBtn.addEventListener("click", async () => {
-        // Show loading screen
-        loadingTitle.textContent = "Running Benchmark Suite...";
-        loadingSubtitle.textContent = "Executing 20 pipeline validation test cases...";
-        loadingOverlay.style.display = "flex";
-        
-        try {
-            const response = await fetch("/api/evaluate", {
-                method: "POST"
-            });
-            
-            if (!response.ok) {
-                throw new Error("Evaluation request failed.");
-            }
-            
-            const data = await response.json();
-            
-            // Render metrics
-            document.getElementById("metric-success-rate").textContent = `${data.summary.success_rate_pct}%`;
-            document.getElementById("metric-val-pass").textContent = `${data.summary.validation_pass_rate_pct}%`;
-            document.getElementById("metric-repair-rate").textContent = `${data.summary.repair_success_rate_pct}%`;
-            document.getElementById("metric-latency").textContent = `${data.summary.average_latency_sec}s`;
-            
-            // Render table details
-            evalTableBody.innerHTML = "";
-            data.details.forEach(item => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${item.id}</td>
-                    <td><strong>${item.name}</strong></td>
-                    <td><span style="font-size:0.8rem; opacity:0.8;">${item.category.replace('_', ' ')}</span></td>
-                    <td><span class="${item.success ? 'badge-success' : 'badge-danger'}">${item.success ? 'PASS' : 'FAIL'}</span></td>
-                    <td><span class="${item.validation_passed_initially ? 'badge-success' : 'badge-warning'}">${item.validation_passed_initially ? 'YES' : 'NO'}</span></td>
-                    <td>${item.repair_needed ? `<span class="badge-warning">REPAIRED (Attempts: ${item.repair_attempts})</span>` : '<span style="color:var(--text-muted)">NONE</span>'}</td>
-                    <td>${item.latency_sec}s</td>
-                `;
-                evalTableBody.innerHTML += tr.outerHTML;
-            });
-            
-            // Toggle visibility
-            evalPlaceholder.style.display = "none";
-            evalMetricsGrid.style.display = "grid";
-            evalResultsPanel.style.display = "block";
-            
-        } catch (err) {
-            alert(err.message);
-        } finally {
-            loadingOverlay.style.display = "none";
-        }
-    });
 });

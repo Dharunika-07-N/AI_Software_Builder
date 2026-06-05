@@ -1,6 +1,21 @@
 import re
 from app.pipeline.models import ApplicationSchema, ValidationResult, ValidationError
 
+
+def _normalize_route(route: str) -> str:
+    parts = [p for p in route.split("/") if p and p != "api"]
+    return parts[0].lower() if parts else ""
+
+
+def _matches_api_route(expected_method: str, api_route: str, registered_method: str, registered_path: str) -> bool:
+    if expected_method != registered_method:
+        return False
+    if api_route == registered_path:
+        return True
+    pattern = "^" + re.sub(r"\{[a-zA-Z0-9_]+\}", r"[a-zA-Z0-9_-]+", registered_path) + "$"
+    return re.match(pattern, api_route) is not None
+
+
 def validate_schema(app_schema: ApplicationSchema) -> ValidationResult:
     """Stage 5: Validation Mesh.
     Verifies type safety, structural rules, and cross-layer consistency.
@@ -71,9 +86,16 @@ def validate_schema(app_schema: ApplicationSchema) -> ValidationResult:
     # 2. API Validation
     api_schema = app_schema.api
     api_routes = {}
+    api_route_patterns = []
     for ep_idx, ep in enumerate(api_schema.endpoints):
         route_key = f"{ep.method} {ep.route}"
         api_routes[route_key] = ep
+
+        registered_method, registered_path = ep.method, ep.route
+        pattern = None
+        if "{" in registered_path:
+            pattern = re.compile(r"^" + re.sub(r"\{[a-zA-Z0-9_]+\}", r"[a-zA-Z0-9_-]+", registered_path) + r"$")
+        api_route_patterns.append((registered_method, registered_path, pattern))
         
         # Verify endpoint references valid database tables in CRUD operations
         # Heuristic: Extract entity name from route e.g. /api/contacts -> contacts
@@ -120,21 +142,14 @@ def validate_schema(app_schema: ApplicationSchema) -> ValidationResult:
             # Check if component has an api_route and if it exists in API
             api_route = comp.props.get("api_route")
             if api_route:
-                # We check for GET if it's a table/widget, POST if it's a form
                 expected_method = "POST" if comp.type == "form" else "GET"
-                route_key = f"{expected_method} {api_route}"
-                
-                # Check for direct route or parameterized route, e.g. /api/contacts/{id}
                 route_found = False
-                for registered_route in api_routes.keys():
-                    registered_method, registered_path = registered_route.split(" ")
-                    if registered_method == expected_method:
-                        # Simple regex comparison to match parameterized routes like /api/contacts/{id}
-                        pattern = re.sub(r"\{[a-zA-Z0-9_]+\}", r"[a-zA-Z0-9_-]+", registered_path) + "$"
-                        if re.match(pattern, api_route):
-                            route_found = True
-                            break
-                            
+                for registered_method, registered_path, pattern in api_route_patterns:
+                    if expected_method != registered_method:
+                        continue
+                    if api_route == registered_path or (pattern and pattern.match(api_route)):
+                        route_found = True
+                        break
                 if not route_found:
                     errors.append(ValidationError(
                         layer="CROSS_LAYER",
